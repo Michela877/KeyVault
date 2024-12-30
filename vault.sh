@@ -148,12 +148,15 @@ function reset_wallet() {
                 ;;
             4)
                 # Clona o aggiorna il repository Git e sostituisce il file vault.sh
-                echo "Aggiornamento di KeyVault"
+                echo "Aggiornamento del file vault.sh dal repository GitHub..."
                 git clone https://github.com/Michela877/KeyVault.git /tmp/KeyVault || (cd /tmp/KeyVault && git pull)
                 if [ -f /tmp/KeyVault/vault.sh ]; then
                     cp /tmp/KeyVault/vault.sh "$HOME/vault.sh"
                     chmod +x "$HOME/vault.sh"  # Rende eseguibile il file
-                    echo "KeyVault aggiornato con successo!"
+                    echo "File vault.sh aggiornato e reso eseguibile con successo!"
+
+                    # Riavvia il programma
+                    exec "$HOME/vault.sh"  # Riavvia lo script
                 else
                     echo "Errore: il file vault.sh non è stato trovato nel repository."
                 fi
