@@ -120,7 +120,7 @@ function modifica_password() {
 # Funzione per resettare le password
 function reset_wallet() {
     echo "Seleziona un'opzione per il reset:"
-    options=("Indietro" "Reset a impostazioni di fabbrica (cancella tutto)" "Cancella solo un applicativo specifico" "Aggiorna KeyVault (Attaccare il dispositivo al pc)")
+    options=("Indietro" "Reset a impostazioni di fabbrica (cancella tutto)" "Cancella solo un applicativo specifico" "Aggiorna KeyVault da pc")
     select opzione_reset in "${options[@]}"; do
         case $REPLY in
             1) return ;;
