@@ -209,8 +209,8 @@ function reset_wallet() {
 }
 
 
-# Disabilita i segnali Ctrl+C (SIGINT) e Ctrl+Z (SIGTSTP)
-trap '' SIGINT SIGTSTP
+# Disabilita i segnali Ctrl+C (SIGINT) e Ctrl+Z (SIGTSTP) e Ctrl+D (SIGQUIT)
+trap '' SIGINT SIGTSTP SIGQUIT
 
 # Menu principale
 while true; do
