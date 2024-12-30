@@ -126,8 +126,42 @@ function reset_wallet() {
                     if [ "$app_to_delete" == "Indietro" ]; then
                         return
                     elif [ -n "$app_to_delete" ]; then
-                        sed -i "/^$app_to_delete:/d" "$DB_FILE"
-                        echo "Applicativo $app_to_delete cancellato!"
+                        # Opzioni per cancellare l'intero applicativo o cancellare singole voci
+                        echo "Seleziona cosa fare con l'applicativo $app_to_delete:"
+                        options=("Indietro" "Cancella tutto l'applicativo" "Cancella singole voci")
+                        select scelta in "${options[@]}"; do
+                            case $REPLY in
+                                1) return ;; # Indietro
+                                2)
+                                    # Cancella l'intero applicativo
+                                    sed -i "/^$app_to_delete:/d" "$DB_FILE"
+                                    echo "Applicativo $app_to_delete cancellato!"
+                                    break
+                                    ;;
+                                3)
+                                    # Cancella singole voci all'interno dell'applicativo
+                                    echo "Seleziona un ID da cancellare dall'applicativo $app_to_delete:"
+                                    ids=("Indietro" $(grep "^$app_to_delete:" "$DB_FILE" | cut -d':' -f2))
+
+                                    select current_id in "${ids[@]}"; do
+                                        if [ "$current_id" == "Indietro" ]; then
+                                            return
+                                        elif [ -n "$current_id" ]; then
+                                            # Rimuovi solo la voce selezionata (ID e password)
+                                            sed -i "/^$app_to_delete:$current_id:/d" "$DB_FILE"
+                                            echo "ID $current_id cancellato dall'applicativo $app_to_delete!"
+                                            break
+                                        else
+                                            echo "Selezione non valida."
+                                        fi
+                                    done
+                                    break
+                                    ;;
+                                *)
+                                    echo "Opzione non valida."
+                                    ;;
+                            esac
+                        done
                         break
                     else
                         echo "Selezione non valida."
@@ -160,6 +194,7 @@ function reset_wallet() {
         esac
     done
 }
+
 
 # Disabilita i segnali Ctrl+C (SIGINT) e Ctrl+Z (SIGTSTP)
 trap '' SIGINT SIGTSTP
