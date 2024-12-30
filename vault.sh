@@ -39,16 +39,52 @@ function visualizza_password() {
 # Funzione per aggiungere una nuova password
 function aggiungi_password() {
     echo "Seleziona un'opzione:"
-    # Verifica se ci sono applicativi esistenti
     applicativi=("Indietro" $(cut -d':' -f1 "$DB_FILE" | sort | uniq))
 
     # Se non ci sono applicativi esistenti
     if [ ${#applicativi[@]} -eq 1 ]; then
-        options=("Indietro" "Aggiungi nuovo applicativo")
+        echo "Nessun applicativo esistente. Puoi crearne uno nuovo."
+        echo "Inserisci il nome dell'applicativo:"
+        read app_name
+        echo "Inserisci l'ID:"
+        read app_id
+        echo "Inserisci la password:"
+        read -s app_pass  # Input nascosto per sicurezza
+
+        # Aggiungi la password al file
+        echo "$app_name:$app_id:$app_pass" >> "$DB_FILE"
+        echo "Password aggiunta con successo!"
+    else
+        # Se ci sono applicativi esistenti, chiedi se vogliono selezionare un'applicativo esistente
+        echo "Seleziona un applicativo esistente per aggiungere una nuova password o crea uno nuovo:"
+        options=("Indietro" "Aggiungi a un applicativo esistente" "Crea nuovo applicativo")
         select scelta in "${options[@]}"; do
             case $REPLY in
                 1) return ;; # Indietro
                 2)
+                    echo "Seleziona un applicativo esistente:"
+                    select app_name in "${applicativi[@]}"; do
+                        if [ "$app_name" == "Indietro" ]; then
+                            return
+                        elif [ -n "$app_name" ]; then
+                            echo "Selezionato: $app_name"
+                            echo "Inserisci un nuovo ID per l'applicativo $app_name:"
+                            read new_id
+                            echo "Inserisci la nuova password:"
+                            read -s new_pass  # Input nascosto per sicurezza
+
+                            # Aggiungi la nuova password
+                            echo "$app_name:$new_id:$new_pass" >> "$DB_FILE"
+                            echo "Nuova password aggiunta con successo!"
+                            break
+                        else
+                            echo "Selezione non valida."
+                        fi
+                    done
+                    break
+                    ;;
+                3)
+                    # Crea un nuovo applicativo
                     echo "Inserisci il nome dell'applicativo:"
                     read app_name
                     echo "Inserisci l'ID:"
@@ -56,8 +92,9 @@ function aggiungi_password() {
                     echo "Inserisci la password:"
                     read -s app_pass  # Input nascosto per sicurezza
 
+                    # Aggiungi la password al file
                     echo "$app_name:$app_id:$app_pass" >> "$DB_FILE"
-                    echo "Password aggiunta con successo!"
+                    echo "Nuovo applicativo creato con successo!"
                     break
                     ;;
                 *)
@@ -65,28 +102,9 @@ function aggiungi_password() {
                     ;;
             esac
         done
-    else
-        # Se ci sono applicativi esistenti, chiedi se vogliono selezionare un'applicativo esistente
-        echo "Seleziona un applicativo esistente per aggiungere una nuova password:"
-        select app_name in "${applicativi[@]}"; do
-            if [ "$app_name" == "Indietro" ]; then
-                return
-            elif [ -n "$app_name" ]; then
-                echo "Selezionato: $app_name"
-                echo "Inserisci un nuovo ID per l'applicativo $app_name:"
-                read new_id
-                echo "Inserisci la nuova password:"
-                read -s new_pass  # Input nascosto per sicurezza
-
-                echo "$app_name:$new_id:$new_pass" >> "$DB_FILE"
-                echo "Nuova password aggiunta con successo!"
-                break
-            else
-                echo "Selezione non valida."
-            fi
-        done
     fi
 }
+
 
 # Funzione per resettare le password
 function reset_wallet() {
