@@ -154,7 +154,10 @@ function reset_wallet() {
                     cp /tmp/KeyVault/vault.sh "$HOME/vault.sh"
                     chmod +x "$HOME/vault.sh"  # Rende eseguibile il file
                     echo "File vault.sh aggiornato e reso eseguibile con successo!"
-
+                    
+                    # Messaggio che l'aggiornamento è completo
+                    echo "Premi INVIO per riavviare il programma..."
+                    read
                     # Riavvia il programma
                     exec "$HOME/vault.sh"  # Riavvia lo script
                 else
