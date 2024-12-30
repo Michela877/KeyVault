@@ -4,3 +4,5 @@ nano ~/.bashrc
 
 inserire all'ultima riga questo che è il path assoluto dove prendere il codice bash
 /bin/bash /home/michela/vault.sh
+
+per uscire dal programma il codice segreto supercalifragili
