@@ -39,82 +39,53 @@ function visualizza_password() {
 # Funzione per aggiungere una nuova password
 function aggiungi_password() {
     echo "Seleziona un'opzione:"
-    options=("Indietro" "Aggiungi nuova password")
-    select scelta in "${options[@]}"; do
-        case $REPLY in
-            1) return ;; # Indietro
-            2)
-                echo "Inserisci il nome dell'applicativo:"
-                read app_name
-                echo "Inserisci l'ID:"
-                read app_id
-                echo "Inserisci la password:"
-                read -s app_pass  # Input nascosto per sicurezza
-
-                echo "$app_name:$app_id:$app_pass" >> "$DB_FILE"
-                echo "Password aggiunta con successo!"
-                break
-                ;;
-            *)
-                echo "Opzione non valida."
-                ;;
-        esac
-    done
-}
-
-# Funzione per modificare password o ID
-function modifica_password() {
-    echo "Applicativi disponibili:"
+    # Verifica se ci sono applicativi esistenti
     applicativi=("Indietro" $(cut -d':' -f1 "$DB_FILE" | sort | uniq))
 
-    select app_name in "${applicativi[@]}"; do
-        if [ "$app_name" == "Indietro" ]; then
-            return
-        elif [ -n "$app_name" ]; then
-            ids=("Indietro" $(grep "^$app_name:" "$DB_FILE" | cut -d':' -f2))
+    # Se non ci sono applicativi esistenti
+    if [ ${#applicativi[@]} -eq 1 ]; then
+        options=("Indietro" "Aggiungi nuovo applicativo")
+        select scelta in "${options[@]}"; do
+            case $REPLY in
+                1) return ;; # Indietro
+                2)
+                    echo "Inserisci il nome dell'applicativo:"
+                    read app_name
+                    echo "Inserisci l'ID:"
+                    read app_id
+                    echo "Inserisci la password:"
+                    read -s app_pass  # Input nascosto per sicurezza
 
-            select current_id in "${ids[@]}"; do
-                if [ "$current_id" == "Indietro" ]; then
-                    return
-                elif [ -n "$current_id" ]; then
-                    record=$(grep "^$app_name:$current_id:" "$DB_FILE")
-                    old_pass=$(echo "$record" | cut -d':' -f3)
-
-                    echo "Vuoi modificare:"
-                    options=("Indietro" "Solo la password" "Sia ID che password")
-                    select scelta_modifica in "${options[@]}"; do
-                        case $REPLY in
-                            1) return ;; # Indietro
-                            2)
-                                new_id="$current_id" # Mantieni l'ID corrente
-                                echo "Inserisci la nuova password:"
-                                read -s new_pass
-                                ;;
-                            3)
-                                echo "Inserisci il nuovo ID:"
-                                read new_id
-                                echo "Inserisci la nuova password:"
-                                read -s new_pass
-                                ;;
-                            *)
-                                echo "Opzione non valida."
-                                continue
-                                ;;
-                        esac
-                        sed -i "s|^$app_name:$current_id:$old_pass\$|$app_name:$new_id:$new_pass|" "$DB_FILE"
-                        echo "Dati aggiornati con successo!"
-                        break
-                    done
+                    echo "$app_name:$app_id:$app_pass" >> "$DB_FILE"
+                    echo "Password aggiunta con successo!"
                     break
-                else
-                    echo "Selezione non valida."
-                fi
-            done
-            break
-        else
-            echo "Selezione non valida."
-        fi
-    done
+                    ;;
+                *)
+                    echo "Opzione non valida."
+                    ;;
+            esac
+        done
+    else
+        # Se ci sono applicativi esistenti, chiedi se vogliono selezionare un'applicativo esistente
+        echo "Seleziona un applicativo esistente per aggiungere una nuova password:"
+        select app_name in "${applicativi[@]}"; do
+            if [ "$app_name" == "Indietro" ]; then
+                return
+            elif [ -n "$app_name" ]; then
+                echo "Selezionato: $app_name"
+                echo "Inserisci un nuovo ID per l'applicativo $app_name:"
+                read new_id
+                echo "Inserisci la nuova password:"
+                read -s new_pass  # Input nascosto per sicurezza
+
+                echo "$app_name:$new_id:$new_pass" >> "$DB_FILE"
+                echo "Nuova password aggiunta con successo!"
+                break
+            else
+                echo "Selezione non valida."
+            fi
+        done
+    fi
 }
 
 # Funzione per resettare le password
