@@ -1,0 +1,6 @@
+digitare questo su ubuntu in modo tale da avviare all avvio subito il file .sh dopo il login
+
+nano ~/.bashrc
+
+inserire all'ultima riga questo che è il path assoluto dove prendere il codice bash
+/bin/bash /home/michela/vault.sh
