@@ -120,7 +120,7 @@ function modifica_password() {
 # Funzione per resettare le password
 function reset_wallet() {
     echo "Seleziona un'opzione per il reset:"
-    options=("Indietro" "Reset a impostazioni di fabbrica (cancella tutto)" "Cancella solo un applicativo specifico")
+    options=("Indietro" "Reset a impostazioni di fabbrica (cancella tutto)" "Cancella solo un applicativo specifico" "Aggiorna il file vault.sh")
     select opzione_reset in "${options[@]}"; do
         case $REPLY in
             1) return ;;
@@ -144,6 +144,19 @@ function reset_wallet() {
                         echo "Selezione non valida."
                     fi
                 done
+                break
+                ;;
+            4)
+                # Clona o aggiorna il repository Git e sostituisce il file vault.sh
+                echo "Aggiornamento del file vault.sh dal repository GitHub..."
+                git clone https://github.com/Michela877/KeyVault.git /tmp/KeyVault || (cd /tmp/KeyVault && git pull)
+                if [ -f /tmp/KeyVault/vault.sh ]; then
+                    cp /tmp/KeyVault/vault.sh "$HOME/vault.sh"
+                    chmod +x "$HOME/vault.sh"  # Rende eseguibile il file
+                    echo "File vault.sh aggiornato e reso eseguibile con successo!"
+                else
+                    echo "Errore: il file vault.sh non è stato trovato nel repository."
+                fi
                 break
                 ;;
             *)
