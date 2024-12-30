@@ -22,12 +22,25 @@ function visualizza_password() {
         if [ "$app_name" == "Indietro" ]; then
             return
         elif [ -n "$app_name" ]; then
-            grep "^$app_name:" "$DB_FILE" | while IFS=: read -r app id pass; do
-                echo "------------------------"
-                echo "Applicativo: $app"
-                echo "ID: $id"
-                echo "Password: $pass"
-                echo "------------------------"
+            # Se ci sono più ID per lo stesso applicativo, chiedi quale visualizzare
+            ids=("Indietro" $(grep "^$app_name:" "$DB_FILE" | cut -d':' -f2 | sort | uniq))
+
+            select current_id in "${ids[@]}"; do
+                if [ "$current_id" == "Indietro" ]; then
+                    return
+                elif [ -n "$current_id" ]; then
+                    # Visualizza le informazioni per l'ID selezionato
+                    grep "^$app_name:$current_id:" "$DB_FILE" | while IFS=: read -r app id pass; do
+                        echo "------------------------"
+                        echo "Applicativo: $app"
+                        echo "ID: $id"
+                        echo "Password: $pass"
+                        echo "------------------------"
+                    done
+                    break
+                else
+                    echo "Selezione non valida."
+                fi
             done
             break
         else
