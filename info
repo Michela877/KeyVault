@@ -1,3 +1,4 @@
+installare git su ubuntu
 digitare questo su ubuntu in modo tale da avviare all avvio subito il file .sh dopo il login
 
 nano ~/.bashrc
