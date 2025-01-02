@@ -1,5 +1,7 @@
 import os
 import curses
+import shutil
+import subprocess
 
 DB_FILE = os.path.expanduser("~/.password_wallet.db")
 
@@ -97,14 +99,16 @@ def aggiungi_password(stdscr):
 
 
 def reset_wallet(stdscr):
-    opzioni = ["Indietro", "Reset completo", "Cancella un applicativo"]
+    # Opzioni aggiornate con l'aggiunta della selezione Update
+    opzioni = ["Indietro", "Reset completo", "Cancella un applicativo", "Update da repository"]
     selezione = mostra_menu(stdscr, "Seleziona tipo di reset:", opzioni)
-    if selezione == 0:
+
+    if selezione == 0:  # Indietro
         return
-    elif selezione == 1:
+    elif selezione == 1:  # Reset completo
         scrivi_database([])
         stdscr.addstr(0, 0, "Reset completo eseguito!")
-    elif selezione == 2:
+    elif selezione == 2:  # Cancella un applicativo
         data = leggi_database()
         applicativi = ["Indietro"] + sorted(set(app for app, _, _ in data))
         selezione_app = mostra_menu(stdscr, "Seleziona applicativo da cancellare:", applicativi)
@@ -115,6 +119,38 @@ def reset_wallet(stdscr):
         data = [record for record in data if record[0] != app_da_eliminare]
         scrivi_database(data)
         stdscr.addstr(0, 0, f"Applicativo {app_da_eliminare} eliminato!")
+    elif selezione == 3:  # Update da repository
+        stdscr.addstr(0, 0, "Aggiornamento in corso...")
+        stdscr.refresh()
+
+        # Repository e percorso locale
+        repo_url = "https://github.com/Michela877/KeyVault.git"
+        temp_dir = "/tmp/KeyVault"
+        local_file = os.path.abspath(__file__)  # Percorso del file locale
+
+        try:
+            # Clona o aggiorna il repository
+            if os.path.exists(temp_dir):
+                subprocess.run(["git", "-C", temp_dir, "pull"], check=True)
+            else:
+                subprocess.run(["git", "clone", repo_url, temp_dir], check=True)
+
+            # Percorso del nuovo file da sostituire
+            new_file = os.path.join(temp_dir, "wallet.py")
+
+            # Controlla se il file esiste e lo sostituisce
+            if os.path.exists(new_file):
+                shutil.copy(new_file, local_file)
+                os.chmod(local_file, 0o755)  # Rendi eseguibile il file
+                stdscr.addstr(1, 0, "Aggiornamento completato! Riavvio...")
+                stdscr.refresh()
+                curses.napms(2000)  # Attende 2 secondi
+                os.execv(local_file, ["python3"] + os.sys.argv)  # Riavvia il programma
+            else:
+                stdscr.addstr(1, 0, "Errore: file wallet.py non trovato nel repository!")
+        except Exception as e:
+            stdscr.addstr(1, 0, f"Errore durante l'aggiornamento: {e}")
+
     stdscr.refresh()
     stdscr.getch()
 
