@@ -136,7 +136,7 @@ def reset_wallet(stdscr):
                 subprocess.run(["git", "clone", repo_url, temp_dir], check=True)
 
             # Percorso del nuovo file da sostituire
-            new_file = os.path.join(temp_dir, "wallet.py")
+            new_file = os.path.join(temp_dir, "Wallet.py")
 
             # Controlla se il file esiste e lo sostituisce
             if os.path.exists(new_file):
@@ -147,7 +147,7 @@ def reset_wallet(stdscr):
                 curses.napms(2000)  # Attende 2 secondi
                 os.execv(local_file, ["python3"] + os.sys.argv)  # Riavvia il programma
             else:
-                stdscr.addstr(1, 0, "Errore: file wallet.py non trovato nel repository!")
+                stdscr.addstr(1, 0, "Errore: file Wallet.py non trovato nel repository!")
         except Exception as e:
             stdscr.addstr(1, 0, f"Errore durante l'aggiornamento: {e}")
 
