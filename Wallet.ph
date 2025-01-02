@@ -1,10 +1,7 @@
 import os
 import curses
-import shutil
 import requests
-import git
-
-
+import subprocess
 
 DB_FILE = os.path.expanduser("~/.password_wallet.db")
 
@@ -103,9 +100,8 @@ def aggiungi_password(stdscr):
 
 def reset_wallet(stdscr):
     # Percorsi assoluti per il file locale e URL remoto
-    local_file = "/home/michela/KeyVault"  # <-- Cartella locale che vuoi sovrascrivere
+    local_file = "/home/michela"  # <-- Modifica il path assoluto
     url = "https://github.com/Michela877/KeyVault.git"
-    temp_dir = "/tmp/KeyVault"  # Cartella temporanea dove clonare il repository
 
     # Opzioni del menu reset
     opzioni = ["Indietro", "Reset completo", "Cancella un applicativo", "Update"]
@@ -115,11 +111,11 @@ def reset_wallet(stdscr):
         return
 
     elif selezione == 1:  # Reset completo
-        scrivi_database([])
+        scrivi_database([])  # Funzione per azzerare il database
         stdscr.addstr(0, 0, "Reset completo eseguito!")
 
     elif selezione == 2:  # Cancella un applicativo
-        data = leggi_database()
+        data = leggi_database()  # Funzione per leggere il database
         applicativi = ["Indietro"] + sorted(set(app for app, _, _ in data))
         selezione_app = mostra_menu(stdscr, "Seleziona applicativo da cancellare:", applicativi)
         if selezione_app == 0:
@@ -127,7 +123,7 @@ def reset_wallet(stdscr):
 
         app_da_eliminare = applicativi[selezione_app]
         data = [record for record in data if record[0] != app_da_eliminare]
-        scrivi_database(data)
+        scrivi_database(data)  # Funzione per riscrivere il database senza l'applicativo eliminato
         stdscr.addstr(0, 0, f"Applicativo {app_da_eliminare} eliminato!")
 
     elif selezione == 3:  # Update
@@ -136,27 +132,15 @@ def reset_wallet(stdscr):
             stdscr.addstr(0, 0, "Scaricamento aggiornamento...")
             stdscr.refresh()
 
-            # Clona o aggiorna il repository in una cartella temporanea
-            if os.path.exists(temp_dir):
-                shutil.rmtree(temp_dir)  # Rimuove la cartella temporanea se esiste
-            git.Repo.clone_from(url, temp_dir)
+            # Usa subprocess per eseguire il pull del repository
+            subprocess.run(['git', 'clone', '--depth', '1', '--single-branch', url, local_file], check=True)
+            stdscr.addstr(1, 0, "Update completato con successo!")
 
-            # Sovrascrive i file della cartella locale con i file clonati
-            if os.path.exists(local_file):
-                for item in os.listdir(temp_dir):
-                    s = os.path.join(temp_dir, item)
-                    d = os.path.join(local_file, item)
-                    if os.path.isdir(s):
-                        shutil.copytree(s, d, dirs_exist_ok=True)  # Sovrascrive le cartelle
-                    else:
-                        shutil.copy2(s, d)  # Sovrascrive i file
-
-                stdscr.addstr(1, 0, "Update completato con successo!")
-            else:
-                stdscr.addstr(1, 0, f"Errore: la cartella {local_file} non esiste!")
+        except subprocess.CalledProcessError as e:
+            stdscr.addstr(1, 0, f"Errore durante l'update: {str(e)}")
 
         except Exception as e:
-            stdscr.addstr(1, 0, f"Errore durante l'update: {str(e)}")
+            stdscr.addstr(1, 0, f"Errore: {str(e)}")
 
     stdscr.refresh()
     stdscr.getch()
