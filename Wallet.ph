@@ -99,6 +99,11 @@ def aggiungi_password(stdscr):
 
 
 def reset_wallet(stdscr):
+    # Percorsi assoluti per il file locale e URL remoto
+    local_file = "/home/michela/KeyVault/Wallet.py"  # <-- MODIFICA QUI IL PATH ASSOLUTO!
+    url = "https://raw.githubusercontent.com/Michela877/KeyVault/main/wallet.py"
+
+    # Opzioni del menu reset
     opzioni = ["Indietro", "Reset completo", "Cancella un applicativo", "Update"]
     selezione = mostra_menu(stdscr, "Seleziona tipo di reset:", opzioni)
     
@@ -123,23 +128,18 @@ def reset_wallet(stdscr):
 
     elif selezione == 3:  # Update
         try:
-            # Percorso del file locale
-            local_file = os.path.abspath(__file__)
-            
-            # URL del file wallet.py su GitHub
-            url = "https://raw.githubusercontent.com/Michela877/KeyVault/main/Wallet.py"
-            
-            # Scarica il contenuto aggiornato
+            # Scarica il contenuto aggiornato dal repository
             stdscr.addstr(0, 0, "Scaricamento aggiornamento...")
             stdscr.refresh()
 
             response = requests.get(url)
             if response.status_code == 200:
+                # Scrive il nuovo contenuto nel file locale
                 with open(local_file, 'wb') as file:
                     file.write(response.content)
                 stdscr.addstr(1, 0, "Update completato con successo!")
             else:
-                stdscr.addstr(1, 0, "Errore: file Wallet.py non trovato nel repository!")
+                stdscr.addstr(1, 0, f"Errore: impossibile scaricare il file ({response.status_code})!")
 
         except Exception as e:
             stdscr.addstr(1, 0, f"Errore durante l'update: {str(e)}")
