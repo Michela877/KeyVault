@@ -1,7 +1,9 @@
 import os
 import curses
-import subprocess
 import shutil
+import requests
+import git
+from pathlib import Path
 
 
 DB_FILE = os.path.expanduser("~/.password_wallet.db")
@@ -100,9 +102,10 @@ def aggiungi_password(stdscr):
 
 
 def reset_wallet(stdscr):
-    # Percorsi assoluti
-    local_folder = "/home/michela/KeyVault"  # <-- MODIFICA QUI IL PATH ASSOLUTO!
-    repo_url = "https://github.com/Michela877/KeyVault.git"
+    # Percorsi assoluti per il file locale e URL remoto
+    local_file = "/home/michela/KeyVault"  # <-- Cartella locale che vuoi sovrascrivere
+    url = "https://github.com/Michela877/KeyVault.git"
+    temp_dir = "/tmp/KeyVault"  # Cartella temporanea dove clonare il repository
 
     # Opzioni del menu reset
     opzioni = ["Indietro", "Reset completo", "Cancella un applicativo", "Update"]
@@ -129,24 +132,31 @@ def reset_wallet(stdscr):
 
     elif selezione == 3:  # Update
         try:
-            # Mostra il messaggio di aggiornamento
-            stdscr.addstr(0, 0, "Aggiornamento in corso...")
+            # Scarica il contenuto aggiornato dal repository
+            stdscr.addstr(0, 0, "Scaricamento aggiornamento...")
             stdscr.refresh()
 
-            # Rimuove la cartella locale esistente
-            if os.path.exists(local_folder):
-                shutil.rmtree(local_folder)
+            # Clona o aggiorna il repository in una cartella temporanea
+            if os.path.exists(temp_dir):
+                shutil.rmtree(temp_dir)  # Rimuove la cartella temporanea se esiste
+            git.Repo.clone_from(url, temp_dir)
 
-            # Clona il repository remoto
-            subprocess.run(["git", "clone", repo_url, local_folder], check=True)
-            
-            # Messaggio di successo
-            stdscr.addstr(1, 0, "Update completato con successo!")
+            # Sovrascrive i file della cartella locale con i file clonati
+            if os.path.exists(local_file):
+                for item in os.listdir(temp_dir):
+                    s = os.path.join(temp_dir, item)
+                    d = os.path.join(local_file, item)
+                    if os.path.isdir(s):
+                        shutil.copytree(s, d, dirs_exist_ok=True)  # Sovrascrive le cartelle
+                    else:
+                        shutil.copy2(s, d)  # Sovrascrive i file
 
-        except subprocess.CalledProcessError as e:
-            stdscr.addstr(1, 0, f"Errore durante il clone: {str(e)}")
+                stdscr.addstr(1, 0, "Update completato con successo!")
+            else:
+                stdscr.addstr(1, 0, f"Errore: la cartella {local_file} non esiste!")
+
         except Exception as e:
-            stdscr.addstr(1, 0, f"Errore imprevisto: {str(e)}")
+            stdscr.addstr(1, 0, f"Errore durante l'update: {str(e)}")
 
     stdscr.refresh()
     stdscr.getch()
