@@ -1,7 +1,5 @@
 import os
 import curses
-import requests
-import subprocess
 
 DB_FILE = os.path.expanduser("~/.password_wallet.db")
 
@@ -77,74 +75,100 @@ def visualizza_password(stdscr):
 
 
 def aggiungi_password(stdscr):
-    stdscr.clear()
-    stdscr.addstr(0, 0, "Nome applicativo: ")
-    stdscr.refresh()
-    applicativo = stdscr.getstr(1, 0, 20).decode("utf-8")
-
-    stdscr.addstr(2, 0, "ID: ")
-    stdscr.refresh()
-    app_id = stdscr.getstr(3, 0, 20).decode("utf-8")
-
-    stdscr.addstr(4, 0, "Password: ")
-    stdscr.refresh()
-    pwd = stdscr.getstr(5, 0, 20).decode("utf-8")
+    stdscr.addstr(0, 0, "Seleziona applicativo esistente o aggiungi nuovo:")
 
     data = leggi_database()
+    applicativi = sorted(set(app for app, _, _ in data))  # Lista degli applicativi esistenti
+    applicativi.append("Nuovo applicativo")  # Aggiungi la scelta di nuovo applicativo
+    applicativi.append("Indietro")  # Aggiungi la possibilità di tornare indietro
+    selezione_app = mostra_menu(stdscr, "Seleziona applicativo:", applicativi)
+
+    if selezione_app == len(applicativi) - 1:  # Se scegli "Indietro"
+        return  # Torna indietro senza fare nulla
+    elif selezione_app == len(applicativi) - 2:  # Se scegli "Nuovo applicativo"
+        stdscr.clear()  # Pulisce la schermata
+        stdscr.addstr(2, 0, "Nome applicativo: ")
+        stdscr.refresh()
+        curses.echo()  # Abilita la visualizzazione dei caratteri digitati
+        applicativo = stdscr.getstr(3, 0, 20).decode("utf-8")
+        curses.noecho()  # Disabilita la visualizzazione dei caratteri digitati dopo l'input
+    else:
+        applicativo = applicativi[selezione_app]
+
+
+    stdscr.addstr(4, 0, "ID: ")
+    stdscr.refresh()
+    curses.echo()  # Abilita la visualizzazione dei caratteri digitati
+    app_id = stdscr.getstr(5, 0, 20).decode("utf-8")
+    curses.noecho()  # Disabilita la visualizzazione dei caratteri digitati dopo l'input
+
+    stdscr.addstr(6, 0, "Password: ")
+    stdscr.refresh()
+    curses.echo()  # Abilita la visualizzazione dei caratteri digitati
+    pwd = stdscr.getstr(7, 0, 20).decode("utf-8")
+    curses.noecho()  # Disabilita la visualizzazione dei caratteri digitati dopo l'input
+
+    # Aggiungi il nuovo ID e password al database
     data.append((applicativo, app_id, pwd))
     scrivi_database(data)
-    stdscr.addstr(7, 0, "Password aggiunta con successo!")
+
+    stdscr.addstr(9, 0, "Password aggiunta con successo!")
     stdscr.refresh()
     stdscr.getch()
 
 
+
+
 def reset_wallet(stdscr):
-    # Percorsi assoluti per il file locale e URL remoto
-    local_file = "/home/michela"  # <-- Modifica il path assoluto
-    url = "https://github.com/Michela877/KeyVault.git"
-
-    # Opzioni del menu reset
-    opzioni = ["Indietro", "Reset completo", "Cancella un applicativo", "Update"]
+    opzioni = ["Indietro", "Reset completo", "Cancella un applicativo"]
     selezione = mostra_menu(stdscr, "Seleziona tipo di reset:", opzioni)
-    
-    if selezione == 0:  # Indietro
+    if selezione == 0:
         return
-
-    elif selezione == 1:  # Reset completo
-        scrivi_database([])  # Funzione per azzerare il database
+    elif selezione == 1:
+        scrivi_database([])
+        stdscr.clear()
         stdscr.addstr(0, 0, "Reset completo eseguito!")
-
-    elif selezione == 2:  # Cancella un applicativo
-        data = leggi_database()  # Funzione per leggere il database
+    elif selezione == 2:
+        data = leggi_database()
         applicativi = ["Indietro"] + sorted(set(app for app, _, _ in data))
         selezione_app = mostra_menu(stdscr, "Seleziona applicativo da cancellare:", applicativi)
         if selezione_app == 0:
             return
 
         app_da_eliminare = applicativi[selezione_app]
-        data = [record for record in data if record[0] != app_da_eliminare]
-        scrivi_database(data)  # Funzione per riscrivere il database senza l'applicativo eliminato
-        stdscr.addstr(0, 0, f"Applicativo {app_da_eliminare} eliminato!")
 
-    elif selezione == 3:  # Update
-        try:
-            # Scarica il contenuto aggiornato dal repository
-            stdscr.addstr(0, 0, "Scaricamento aggiornamento...")
-            stdscr.refresh()
+        # Aggiungi una scelta per l'utente: elimina tutto o elimina ID specifici
+        opzioni_eliminazione = ["Indietro", "Elimina intero applicativo", "Elimina ID specifici"]
+        selezione_eliminazione = mostra_menu(stdscr, f"Seleziona cosa fare con {app_da_eliminare}:", opzioni_eliminazione)
 
-            # Usa subprocess per eseguire il pull del repository
-            subprocess.run(['git', 'clone', '--depth', '1', '--single-branch', url, local_file], check=True)
-            stdscr.addstr(1, 0, "Update completato con successo!")
+        if selezione_eliminazione == 0:
+            return
 
-        except subprocess.CalledProcessError as e:
-            stdscr.addstr(1, 0, f"Errore durante l'update: {str(e)}")
+        if selezione_eliminazione == 1:  # Elimina intero applicativo
+            # Rimuove tutte le voci per l'applicativo selezionato
+            data = [record for record in data if record[0] != app_da_eliminare]
+            scrivi_database(data)
+            stdscr.clear()
+            stdscr.addstr(0, 0, f"Applicativo {app_da_eliminare} eliminato!")
+        
+        elif selezione_eliminazione == 2:  # Elimina ID specifici
+            # Seleziona gli ID da eliminare
+            ids = sorted(set(app_id for app, app_id, _ in data if app == app_da_eliminare))
+            ids.append("Indietro")  # Aggiungi la possibilità di tornare indietro
+            selezione_id = mostra_menu(stdscr, f"Seleziona ID per {app_da_eliminare} da eliminare:", ids)
 
-        except Exception as e:
-            stdscr.addstr(1, 0, f"Errore: {str(e)}")
+            if selezione_id == len(ids) - 1:  # Se l'utente seleziona "Indietro"
+                return
 
+            id_da_eliminare = ids[selezione_id]
+            # Rimuove solo l'ID selezionato per l'applicativo
+            data = [record for record in data if not (record[0] == app_da_eliminare and record[1] == id_da_eliminare)]
+            scrivi_database(data)
+            stdscr.clear()
+            stdscr.addstr(0, 0, f"ID {id_da_eliminare} per {app_da_eliminare} eliminato!")
+        
     stdscr.refresh()
     stdscr.getch()
-
 
 def main(stdscr):
     curses.curs_set(0)  # Nasconde il cursore
