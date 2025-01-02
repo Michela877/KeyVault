@@ -1,6 +1,7 @@
 import os
 import curses
-import requests
+import subprocess
+import shutil
 
 
 DB_FILE = os.path.expanduser("~/.password_wallet.db")
@@ -99,9 +100,9 @@ def aggiungi_password(stdscr):
 
 
 def reset_wallet(stdscr):
-    # Percorsi assoluti per il file locale e URL remoto
-    local_file = "/home/michela"  # <-- MODIFICA QUI IL PATH ASSOLUTO!
-    url = "https://github.com/Michela877/KeyVault.git"
+    # Percorsi assoluti
+    local_folder = "/home/michela/KeyVault"  # <-- MODIFICA QUI IL PATH ASSOLUTO!
+    repo_url = "https://github.com/Michela877/KeyVault.git"
 
     # Opzioni del menu reset
     opzioni = ["Indietro", "Reset completo", "Cancella un applicativo", "Update"]
@@ -128,21 +129,24 @@ def reset_wallet(stdscr):
 
     elif selezione == 3:  # Update
         try:
-            # Scarica il contenuto aggiornato dal repository
-            stdscr.addstr(0, 0, "Scaricamento aggiornamento...")
+            # Mostra il messaggio di aggiornamento
+            stdscr.addstr(0, 0, "Aggiornamento in corso...")
             stdscr.refresh()
 
-            response = requests.get(url)
-            if response.status_code == 200:
-                # Scrive il nuovo contenuto nel file locale
-                with open(local_file, 'wb') as file:
-                    file.write(response.content)
-                stdscr.addstr(1, 0, "Update completato con successo!")
-            else:
-                stdscr.addstr(1, 0, f"Errore: impossibile scaricare il file ({response.status_code})!")
+            # Rimuove la cartella locale esistente
+            if os.path.exists(local_folder):
+                shutil.rmtree(local_folder)
 
+            # Clona il repository remoto
+            subprocess.run(["git", "clone", repo_url, local_folder], check=True)
+            
+            # Messaggio di successo
+            stdscr.addstr(1, 0, "Update completato con successo!")
+
+        except subprocess.CalledProcessError as e:
+            stdscr.addstr(1, 0, f"Errore durante il clone: {str(e)}")
         except Exception as e:
-            stdscr.addstr(1, 0, f"Errore durante l'update: {str(e)}")
+            stdscr.addstr(1, 0, f"Errore imprevisto: {str(e)}")
 
     stdscr.refresh()
     stdscr.getch()
