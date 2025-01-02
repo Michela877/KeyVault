@@ -1,3 +1,4 @@
+vault.sh
 installare git su ubuntu
 digitare questo su ubuntu in modo tale da avviare all avvio subito il file .sh dopo il login
 
@@ -7,3 +8,14 @@ inserire all'ultima riga questo che è il path assoluto dove prendere il codice 
 /bin/bash /home/michela/vault.sh
 
 per uscire dal programma il codice segreto supercalifragili
+
+
+
+per wallet.ph
+
+per visualizzare il programma installare su windows
+Per testare lo script su Windows, devi fare alcune modifiche e installare la libreria windows-curses, poiché il modulo curses non è disponibile nativamente su Windows.
+
+pip install windows-curses per 
+
+python wallet.py
