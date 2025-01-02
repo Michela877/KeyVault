@@ -100,8 +100,8 @@ def aggiungi_password(stdscr):
 
 def reset_wallet(stdscr):
     # Percorsi assoluti per il file locale e URL remoto
-    local_file = "/home/michela/KeyVault/Wallet.py"  # <-- MODIFICA QUI IL PATH ASSOLUTO!
-    url = "https://raw.githubusercontent.com/Michela877/KeyVault/main/wallet.py"
+    local_file = "/home/michela"  # <-- MODIFICA QUI IL PATH ASSOLUTO!
+    url = "https://github.com/Michela877/KeyVault.git"
 
     # Opzioni del menu reset
     opzioni = ["Indietro", "Reset completo", "Cancella un applicativo", "Update"]
