@@ -3,7 +3,7 @@ import curses
 import shutil
 import requests
 import git
-from pathlib import Path
+
 
 
 DB_FILE = os.path.expanduser("~/.password_wallet.db")
