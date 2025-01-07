@@ -1,7 +1,11 @@
 import os
 import curses
 
-DB_FILE = os.path.expanduser("~/.password_wallet.db")
+# Percorso assoluto della cartella del file corrente (dove si trova wallet.py)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Percorso completo al database nella stessa cartella
+DB_FILE = os.path.join(BASE_DIR, "password_wallet.db")
 
 # Inizializza il file se non esiste
 if not os.path.exists(DB_FILE):
@@ -21,7 +25,6 @@ def scrivi_database(data):
     with open(DB_FILE, "w") as db:
         for app, app_id, pwd in data:
             db.write(f"{app}:{app_id}:{pwd}\n")
-
 
 def mostra_menu(stdscr, titolo, opzioni):
     """Mostra un menu e gestisce la selezione con le frecce."""
@@ -94,6 +97,7 @@ def aggiungi_password(stdscr):
         curses.noecho()  # Disabilita la visualizzazione dei caratteri digitati dopo l'input
     else:
         applicativo = applicativi[selezione_app]
+        stdscr.clear()
 
 
     stdscr.addstr(4, 0, "ID: ")
