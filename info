@@ -19,3 +19,5 @@ Per testare lo script su Windows, devi fare alcune modifiche e installare la lib
 pip install windows-curses per 
 
 python wallet.py
+
+visualizzatest git
